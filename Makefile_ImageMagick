@@ -5,6 +5,7 @@ LIBTIFF_VERSION ?= 4.0.9
 BZIP2_VERSION ?= 1.0.6
 LIBWEBP_VERSION ?= 0.6.1
 IMAGEMAGICK_VERSION ?= 7.0.8-45
+FREETYPE_VERSION ?= 2.10.0
 
 TARGET_DIR ?= /opt/
 PROJECT_ROOT = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
@@ -113,6 +114,22 @@ $(CACHE_DIR)/lib/libopenjp2.a: $(OPENJP2_SOURCE) $(CACHE_DIR)/lib/libpng.a $(CAC
 	make clean
 	make install
 
+## libfreetype
+
+FREETYPE_SOURCE=freetype-$(FREETYPE_VERSION).tar.gz
+
+$(FREETYPE_SOURCE): 
+	curl -LO https://download.savannah.gnu.org/releases/freetype/$(FREETYPE_SOURCE)
+
+$(CACHE_DIR)/lib/libfreetype.a: $(FREETYPE_SOURCE) $(GLIB) $(CACHE_DIR)/lib/libpng.a $(CACHE_DIR)/lib/libbz2.a
+	tar xf $<
+	cd freetype-$(FREETYPE_VERSION)
+	$(CONFIGURE) \
+		--with-png \
+		--with-bzip2
+	make distclean clean
+	make
+	make install
 
 ## ImageMagick
 
@@ -121,13 +138,13 @@ IMAGE_MAGICK_SOURCE=ImageMagick-$(IMAGEMAGICK_VERSION).tar.gz
 $(IMAGE_MAGICK_SOURCE):
 	curl -L https://github.com/ImageMagick/ImageMagick/archive/$(IMAGEMAGICK_VERSION).tar.gz -o $(IMAGE_MAGICK_SOURCE)
 
-
 LIBS:=$(CACHE_DIR)/lib/libjpeg.a \
 	$(CACHE_DIR)/lib/libpng.a \
 	$(CACHE_DIR)/lib/libopenjp2.a \
 	$(CACHE_DIR)/lib/libtiff.a \
 	$(CACHE_DIR)/lib/libbz2.a \
-	$(CACHE_DIR)/lib/libwebp.a
+	$(CACHE_DIR)/lib/libwebp.a \
+  $(CACHE_DIR)/lib/libfreetype.a
 
 $(TARGET_DIR)/bin/identify: $(IMAGE_MAGICK_SOURCE) $(LIBS)
 	tar xf $<
